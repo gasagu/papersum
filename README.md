@@ -119,16 +119,7 @@ The service will be available at `http://localhost:8000`.
     python app.py
     ```
 
-## 🔧 Webhook Usage
-
-To use the service, send a `POST` request to the `/webhook` endpoint with a `multipart/form-data` payload. The file must be included in a form field named `file`.
-
-Example using `curl`:
-```bash
-curl -X POST http://localhost:8000/webhook -F "file=@/path/to/your/document.pdf"
-```
-
-## 🐳 Dockerfile Explained
+##  Dockerfile Explained
 
 The `Dockerfile` uses a **multi-stage build** to create a small and secure final image.
 
