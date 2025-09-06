@@ -15,6 +15,10 @@ This is particularly useful for creating an immutable link or verification mecha
 - **Checksum Logging**: Maintains a separate, clean log file (`logs/checksums.log`) of all processed files and their hashes.
 - **Production-Ready**: Built with a secure, multi-stage Dockerfile using a non-root user.
 
+[!Docker Hub](https://hub.docker.com/r/gasagu/papersum)
+
+The easiest way to run this service is by using the pre-built Docker image from Docker Hub. See the Docker Compose section for details.
+
 ## 📝 Note on Compliance (Disclaimer)
 
 This tool generates a cryptographic hash (SHA256) of a file and stores it within Paperless-ngx. This process creates an immutable link between the source file and the digital document, enhancing traceability and integrity.
@@ -41,33 +45,33 @@ The application is configured using environment variables. The method for settin
 ### Prerequisites
 
 - Docker & Docker Compose
-- Python 3.13+ (for local development)
 - A running Paperless-ngx instance.
 - A custom field created in Paperless-ngx to store the hash.
 
 ### 1. Docker Compose (Recommended)
 
-This is the easiest and recommended way to run the service.
+This is the easiest way to run the service, as it doesn't require cloning the source code.
 
-1.  **Clone the repository:**
+1.  **Create a directory** for your configuration and a `logs` subdirectory.
     ```bash
-    git clone <repository-url> && cd papersum
+    mkdir papersum-service && cd papersum-service
+    mkdir logs
     ```
 
-2.  **Create a `docker-compose.yml` file** in the project root and add your configuration directly into the `environment` section.
+2.  **Create a `docker-compose.yml` file** inside the `papersum-service` directory with the following content. Replace the environment variables with your actual Paperless-ngx details.
 
     ```yaml
     version: "3.7"
 
     services:
       papersum:
-        build: .
+        image: gasagu/papersum:1.0 # You can also use 'latest' for the newest version
         container_name: papersum
         restart: unless-stopped
         ports:
           - "8000:8000"
         volumes:
-          # Mount logs to persist checksum log file
+          # Mount logs to persist the checksum log file on your host machine
           - ./logs:/app/logs
         environment:
           - PAPERLESS_API_URL=http://your-paperless-instance.com
@@ -76,9 +80,10 @@ This is the easiest and recommended way to run the service.
           - LOG_LEVEL=INFO
     ```
 
-4.  **Start the service:**
+3.  **Start the service:**
+    Docker Compose will automatically pull the image from Docker Hub.
     ```bash
-    docker-compose up --build -d
+    docker-compose up -d
     ```
 The service will be available at `http://localhost:8000`.
 
