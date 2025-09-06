@@ -27,6 +27,54 @@ This tool generates a cryptographic hash (SHA256) of a file and stores it within
 
 **Disclaimer:** The author is not a legal expert, and this information does not constitute legal advice. Achieving full compliance depends on your entire system architecture and operational processes. This tool is provided as a technical aid only. For a legally binding assessment, please consult a qualified professional, such as a tax advisor or a lawyer specializing in compliance.
 
+## 🔐 Permissions and Workflow for Compliance
+
+To create a robust and compliant workflow (e.g., for GoBD in Germany), it's crucial to configure permissions within Paperless-ngx correctly. The goal is to ensure that once a document's hash is written by this service, it cannot be altered by regular users, thus preserving the document's integrity.
+
+This setup involves two types of users: a regular user and a dedicated API user.
+
+### 1. Regular User Permissions
+
+Your day-to-day users should have restricted permissions to prevent accidental or intentional modification of the integrity hash.
+
+-   Go to `Settings -> Users & Groups` in Paperless-ngx.
+-   Select the group your regular users belong to.
+-   Under `Permissions`, ensure that the permissions for `delete_document` are **NOT** granted.
+-   Under `Permissions`, ensure that the permissions for `change_document` and `delete_document` are **NOT** granted. This is the key step to making the records immutable for regular users.
+-   Users in this group will be able to view documents but will not be able to edit metadata (including the hash) or delete the files.
+
+### 2. Dedicated API User
+
+Create a new, separate user account solely for the `papersum` service.
+
+-   Go to `Settings -> Users & Groups` and create a new user (e.g., `papersum_api_user`).
+-   Grant this user the following specific permissions:
+    -   `view_document`: To find the document and download it for hash verification.
+    -   `change_document`: To write the SHA256 hash into the custom field.
+-   Create an API token for this user.
+-   Use this user's API token for the `PAPERLESS_API_TOKEN` environment variable.
+
+### 3. Paperless-ngx Workflow for Permissions
+
+To ensure that documents are immediately accessible to the correct users after being added, you should create a workflow within Paperless-ngx.
+
+-   Go to `Settings -> Workflows`.
+-   Create a new workflow.
+-   **Trigger**: Set the trigger to `Consumption finished`.
+-   **Actions**: Add an action of type `Set permissions`.
+-   In the action's settings, under `Set view permissions for`, select the user group that contains your regular users.
+-   This workflow will automatically make every new document readable for all members of that group right after it has been processed by Paperless.
+
+### Resulting Workflow
+
+1.  A document is consumed by Paperless-ngx.
+2.  A **Paperless-ngx workflow** triggers automatically, granting `view` permissions to the regular user group. The document is now visible to them.
+3.  A post-consumption webhook triggers the `papersum` service.
+4.  `papersum`, authenticated as the powerful `papersum_api_user`, finds the document, verifies its content by comparing hashes, and writes the definitive SHA256 hash to the custom field.
+5.  Regular users can view the document and its immutable hash but cannot change or delete it, as their group lacks the necessary `change_document` and `delete_document` permissions.
+
+This complete process ensures document integrity and accessibility are handled automatically and securely.
+
 ## ⚙️ Configuration
 
 The application is configured using environment variables. The method for setting them depends on how you run the service (Docker Compose vs. local development).
@@ -118,14 +166,6 @@ The service will be available at `http://localhost:8000`.
     ```bash
     python app.py
     ```
-
-##  Dockerfile Explained
-
-The `Dockerfile` uses a **multi-stage build** to create a small and secure final image.
-
-1.  **`builder` stage**: This stage uses a full Python image with build tools (`build-base`) to install the Python dependencies from `requirements.txt`. This keeps build-time dependencies out of the final image.
-
-2.  **Final stage**: This stage starts from a clean, lightweight `python:3.13-alpine` base. It creates a dedicated, non-root user (`app`) for running the application. Only the installed Python packages and the application code (`app.py`) are copied from the `builder` stage. This approach significantly reduces the image size and improves security by adhering to the principle of least privilege.
 
 ## 🤝 Contributing
 
