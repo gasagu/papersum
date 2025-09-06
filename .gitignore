@@ -1,0 +1,19 @@
+# Python virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment variables
+# This file contains secrets and should NOT be committed to version control.
+.env
+
+# Log files
+logs/
+
+# IDE configuration
+.idea/
+.vscode/

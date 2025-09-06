@@ -1,0 +1,20 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Python-spezifisch
+__pycache__/
+*.pyc
+.venv
+
+# Log-Dateien (sollten als Volume gemountet werden, nicht ins Image)
+logs/
+
+# Sensible Umgebungsvariablen
+.env
+
+requirements.in
